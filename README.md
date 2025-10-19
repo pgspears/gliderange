@@ -78,4 +78,4 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 
 ---
 
-**Built with for fun by Accelerate Solutions, LLC using GPT-5 and Claude Opus 4.1**
+**Created by Accelerate Solutions, LLC using GPT-5 and Claude Opus 4.1**
