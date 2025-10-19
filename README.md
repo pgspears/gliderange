@@ -5,7 +5,7 @@
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
 
-An advanced aviation physics simulator that calculates and visualizes aircraft glide ranges using real-world physics models. Perfect for pilots, students, and aviation enthusiasts.
+An aviation physics simulator that calculates and visualizes aircraft glide ranges using real-world physics models. 
 
 
 ## ✨ Features
