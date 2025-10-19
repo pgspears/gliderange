@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Glide Range Explorer Pro | Advanced Aviation Physics Simulator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #3b82f6;
+    --primary-dark: #1e293b;
+    --secondary: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --bg-main: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --accent: #06b6d4;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-secondary) 100%);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+  }
+
+  .header-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    background: linear-gradient(90deg, #fff, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  /* Main Layout */
+  .main-container {
+    display: flex;
+    height: calc(100vh - 120px);
+    position: relative;
+  }
+
+  /* Sidebar */
+  #sidebar {
+    width: 450px;
+    background: var(--bg-secondary);
+    overflow-y: auto;
+    padding: 1.5rem;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 10;
+  }
+
+  #sidebar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  #sidebar::-webkit-scrollbar-track {
+    background: var(--bg-main);
+  }
+
+  #sidebar::-webkit-scrollbar-thumb {
+    background: var(--primary-light);
+    border-radius: 4px;
+  }
+
+  /* Map */
+  #map {
+    flex: 1;
+    position: relative;
+  }
+
+  /* Controls Styling */
+  .control-section {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .control-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .section-title i {
+    margin-right: 0.5rem;
+    font-size: 1.4rem;
+  }
+
+  label {
+    display: block;
+    margin-top: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 0.7rem;
+    margin-top: 0.3rem;
+    background: var(--bg-main);
+    border: 2px solid var(--primary-dark);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(6,182,212,0.2);
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0.5rem 0;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    color: white;
+  }
+
+  .btn-secondary {
+    background: linear-gradient(135deg, var(--secondary), #059669);
+    color: white;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, var(--danger), #dc2626);
+    color: white;
+  }
+
+  .btn-warning {
+    background: linear-gradient(135deg, var(--warning), #d97706);
+    color: white;
+  }
+
+  /* Results Display */
+  #results {
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 20px rgba(6,182,212,0.3);
+  }
+
+  .result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(148,163,184,0.2);
+  }
+
+  .result-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .result-value {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.1rem;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--bg-card);
+  }
+
+  .tab {
+    padding: 0.7rem 1.2rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .tab:hover {
+    color: var(--text-primary);
+  }
+
+  .tab.active {
+    color: var(--accent);
+  }
+
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .tab-content {
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Aircraft Cards */
+  .aircraft-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .aircraft-card {
+    background: var(--bg-main);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .aircraft-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(6,182,212,0.3);
+  }
+
+  .aircraft-card.selected {
+    border-color: var(--secondary);
+    background: linear-gradient(135deg, var(--bg-main), var(--bg-card));
+  }
+
+  /* Physics Cards */
+  .physics-card {
+    background: var(--bg-main);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--accent);
+  }
+
+  .physics-card h4 {
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .formula {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    margin: 1rem 0;
+    border: 1px solid var(--primary-dark);
+    color: var(--secondary);
+  }
+
+  /* Historical Examples */
+  .example-card {
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-main));
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+
+  .example-card:hover {
+    border-color: var(--warning);
+    transform: translateX(5px);
+  }
+
+  .example-title {
+    font-weight: 600;
+    color: var(--warning);
+    margin-bottom: 0.3rem;
+  }
+
+  .example-details {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  /* Loading Spinner */
+  .spinner {
+    border: 3px solid var(--bg-card);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Status Messages */
+  .status {
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    animation: slideIn 0.5s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .status.success {
+    background: rgba(16,185,129,0.2);
+    border: 1px solid var(--secondary);
+    color: var(--secondary);
+  }
+
+  .status.warning {
+    background: rgba(245,158,11,0.2);
+    border: 1px solid var(--warning);
+    color: var(--warning);
+  }
+
+  .status.error {
+    background: rgba(239,68,68,0.2);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+  }
+
+  /* Wind Display */
+  .wind-display {
+    background: var(--bg-main);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .wind-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .wind-icon {
+    font-size: 2rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Footer */
+  footer {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--bg-card);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main-container {
+      flex-direction: column;
+    }
+    #sidebar {
+      width: 100%;
+      height: 50vh;
+    }
+    #map {
+      height: 50vh;
+    }
+  }
+
+  /* Tooltips */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 250px;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    text-align: center;
+    border-radius: 8px;
+    padding: 0.5rem;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -125px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* Advanced Controls */
+  .advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+  }
+
+  .advanced-toggle:hover {
+    background: var(--bg-main);
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background: var(--bg-main);
+    border-radius: 12px;
+    transition: background 0.3s ease;
+  }
+
+  .toggle-switch.active {
+    background: var(--secondary);
+  }
+
+  .toggle-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+  }
+
+  .toggle-switch.active .toggle-slider {
+    transform: translateX(26px);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-content">
+    <h1><i class="fas fa-plane"></i> Glide Range Explorer Pro</h1>
+    <p class="subtitle">Advanced Aviation Physics Simulator & Emergency Landing Planner</p>
+    <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem;">
+      <span><i class="fas fa-calculator"></i> Real Physics</span>
+      <span><i class="fas fa-wind"></i> Live Weather</span>
+      <span><i class="fas fa-mountain"></i> Terrain Analysis</span>
+      <span><i class="fas fa-history"></i> Historic Flights</span>
+    </div>
+  </div>
+</header>
+
+<div class="main-container">
+  <div id="sidebar">
+    <!-- Aircraft Selection -->
+    <div class="control-section">
+      <h3 class="section-title"><i class="fas fa-plane-departure"></i> Aircraft Configuration</h3>
+      
+      <label>Aircraft Category</label>
+      <select id="category" onchange="updateAircraftList()">
+        <option value="commercial">Commercial Jets</option>
+        <option value="ga">General Aviation</option>
+        <option value="military">Military</option>
+        <option value="glider">Gliders</option>
+        <option value="custom">Custom</option>
+      </select>
+
+      <label>Aircraft Model</label>
+      <select id="aircraft">
+        <option value="15">Boeing 737-800 (L/D: 15:1)</option>
+        <option value="16">Boeing 757-200 (L/D: 16:1)</option>
+        <option value="17">Airbus A320 (L/D: 17:1)</option>
+        <option value="18">Boeing 777-300 (L/D: 18:1)</option>
+        <option value="19">Boeing 787-9 (L/D: 19:1)</option>
+        <option value="20">Airbus A350-900 (L/D: 20:1)</option>
+        <option value="21">Boeing 747-8 (L/D: 21:1)</option>
+      </select>
+
+      <label>Weight Configuration</label>
+      <select id="weight">
+        <option value="light">Light (Empty + Min Fuel)</option>
+        <option value="normal">Normal (50% Payload)</option>
+        <option value="heavy">Heavy (MTOW)</option>
+      </select>
+    </div>
+
+    <!-- Flight Parameters -->
+    <div class="control-section">
+      <h3 class="section-title"><i class="fas fa-sliders-h"></i> Flight Parameters</h3>
+      
+      <label>Starting Altitude (ft) 
+        <span class="tooltip">
+          <i class="fas fa-info-circle"></i>
+          <span class="tooltiptext">Typical cruise altitudes: Regional jets: 25,000-35,000 ft, Long-haul: 35,000-43,000 ft</span>
+        </span>
+      </label>
+      <input type="number" id="altitude" value="35000" min="0" max="45000">
+
+      <label>Indicated Airspeed (knots)</label>
+      <input type="number" id="airspeed" value="250" min="100" max="400">
+
+      <label>Bank Angle (degrees)</label>
+      <input type="range" id="bank" value="0" min="0" max="45" oninput="updateBankDisplay()">
+      <div id="bankDisplay">Bank: 0° (Straight)</div>
+
+      <label>Configuration</label>
+      <select id="config">
+        <option value="clean">Clean</option>
+        <option value="gear">Gear Down</option>
+        <option value="flaps10">Flaps 10°</option>
+        <option value="flaps20">Flaps 20°</option>
+        <option value="full">Full Configuration</option>
+      </select>
+    </div>
+
+    <!-- Environmental Conditions -->
+    <div class="control-section">
+      <h3 class="section-title"><i class="fas fa-cloud-sun"></i> Environmental Conditions</h3>
+      
+      <label>Wind Component (knots)</label>
+      <input type="number" id="wind" value="0" min="-200" max="200">
+      <small style="color: var(--text-secondary);">Positive = Tailwind, Negative = Headwind</small>
+
+      <label>Temperature Deviation (°C from ISA)</label>
+      <input type="number" id="temp" value="0" min="-30" max="30">
+
+      <label>Atmospheric Conditions</label>
+      <select id="atmosphere">
+        <option value="standard">Standard Atmosphere</option>
+        <option value="turbulent">Turbulent</option>
+        <option value="thermals">Thermal Activity</option>
+        <option value="mountain">Mountain Wave</option>
+      </select>
+
+      <div class="advanced-toggle" onclick="toggleAdvanced()">
+        <div class="toggle-switch" id="advancedToggle">
+          <div class="toggle-slider"></div>
+        </div>
+        <span>Advanced Weather Mode</span>
+      </div>
+    </div>
+
+    <!-- Position -->
+    <div class="control-section">
+      <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> Position</h3>
+      
+      <label>Latitude</label>
+      <input type="number" id="lat" value="40.7128" step="0.0001">
+
+      <label>Longitude</label>
+      <input type="number" id="lon" value="-74.0060" step="0.0001">
+
+      <button class="btn btn-secondary" onclick="getCurrentLocation()">
+        <i class="fas fa-location-arrow"></i> Use My Location
+      </button>
+    </div>
+
+    <!-- Actions -->
+    <div class="control-section">
+      <button class="btn btn-primary" onclick="calculateGlide()">
+        <i class="fas fa-calculator"></i> Calculate Glide Range
+      </button>
+      <button class="btn btn-warning" onclick="simulateFlight()">
+        <i class="fas fa-play"></i> Simulate Flight Path
+      </button>
+      <button class="btn btn-danger" onclick="resetAll()">
+        <i class="fas fa-redo"></i> Reset All
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div id="results"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('physics')">Physics</button>
+      <button class="tab" onclick="showTab('history')">History</button>
+      <button class="tab" onclick="showTab('education')">Education</button>
+    </div>
+
+    <!-- Physics Tab -->
+    <div class="tab-content active" id="physics-tab">
+      <div class="physics-card">
+        <h4><i class="fas fa-atom"></i> Glide Ratio (L/D)</h4>
+        <p>The lift-to-drag ratio determines how efficiently an aircraft converts altitude into horizontal distance.</p>
+        <div class="formula">
+          Glide Distance = (Altitude / 6076) × L/D × (Ground Speed / Airspeed)
+        </div>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-tachometer-alt"></i> Best Glide Speed (Vbg)</h4>
+        <p>The airspeed that provides maximum glide distance. Typically:</p>
+        <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+          <li>Light aircraft: 65-75 knots</li>
+          <li>Regional jets: 200-220 knots</li>
+          <li>Large jets: 240-280 knots</li>
+        </ul>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-weight"></i> Weight Effects</h4>
+        <p>Heavier aircraft glide at higher speeds but maintain the same glide angle in still air.</p>
+        <div class="formula">
+          Vbg(heavy) = Vbg(light) × √(Weight(heavy) / Weight(light))
+        </div>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-wind"></i> Wind Gradient</h4>
+        <p>Wind speed typically increases with altitude. This affects optimal glide strategy:</p>
+        <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+          <li>Headwind: Fly faster than Vbg</li>
+          <li>Tailwind: Fly at or slightly below Vbg</li>
+        </ul>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-mountain"></i> Terrain Considerations</h4>
+        <p>Mountains create:</p>
+        <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+          <li>Lee waves: Can extend glide significantly</li>
+          <li>Ridge lift: Usable along mountain ridges</li>
+          <li>Sink: Dangerous downdrafts on lee side</li>
+        </ul>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-thermometer-half"></i> Density Altitude</h4>
+        <p>High altitude and temperature reduce air density, affecting:</p>
+        <div class="formula">
+          True Airspeed = Indicated Airspeed × √(ρ₀/ρ)
+        </div>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Where ρ is air density</p>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-circle-notch"></i> Turning Performance</h4>
+        <p>Banking reduces vertical lift component:</p>
+        <div class="formula">
+          Sink Rate × = 1 / cos(bank angle)
+        </div>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">30° bank = 15% increase in sink rate</p>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-exclamation-triangle"></i> Emergency Factors</h4>
+        <p>Real-world considerations:</p>
+        <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+          <li>Engine windmilling: -10% to -20% L/D</li>
+          <li>Damage: Variable, often -30% to -50%</li>
+          <li>Ice accumulation: -20% to -40% L/D</li>
+          <li>Landing gear: -30% to -40% L/D</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- History Tab -->
+    <div class="tab-content" id="history-tab">
+      <h3 style="color: var(--warning); margin-bottom: 1rem;">
+        <i class="fas fa-history"></i> Famous Gliding Incidents
+      </h3>
+      
+      <div class="example-card" onclick="loadExample('transat236')">
+        <div class="example-title">Air Transat 236 (2001)</div>
+        <div class="example-details">
+          A330 • Azores • 75 miles • All 306 survived
+          <br>Fuel leak over Atlantic, longest passenger jet glide
+        </div>
+      </div>
+
+      <div class="example-card" onclick="loadExample('gimli')">
+        <div class="example-title">Gimli Glider (1983)</div>
+        <div class="example-details">
+          B767 • Canada • 17 miles • All 69 survived
+          <br>Fuel miscalculation, landed at former airbase
+        </div>
+      </div>
+
+      <div class="example-card" onclick="loadExample('hudson')">
+        <div class="example-title">Miracle on the Hudson (2009)</div>
+        <div class="example-details">
+          A320 • New York • 8.5 miles • All 155 survived
+          <br>Dual engine failure from bird strike
+        </div>
+      </div>
+
+      <div class="example-card" onclick="loadExample('taca110')">
+        <div class="example-title">TACA Flight 110 (1988)</div>
+        <div class="example-details">
+          B737 • New Orleans • 8 miles • All 45 survived
+          <br>Dual engine flameout in hail, landed on levee
+        </div>
+      </div>
+
+      <div class="example-card" onclick="loadExample('ba9')">
+        <div class="example-title">British Airways 9 (1982)</div>
+        <div class="example-details">
+          B747 • Indonesia • 25 miles • All 263 survived
+          <br>All four engines failed from volcanic ash
+        </div>
+      </div>
+
+      <div class="example-card" onclick="loadExample('aloha243')">
+        <div class="example-title">Aloha Airlines 243 (1988)</div>
+        <div class="example-details">
+          B737 • Hawaii • Partial glide • 1 fatality
+          <br>Explosive decompression, roof torn off
+        </div>
+      </div>
+
+      <div class="example-card" onclick="loadExample('ethiopian961')">
+        <div class="example-title">Ethiopian Airlines 961 (1996)</div>
+        <div class="example-details">
+          B767 • Indian Ocean • Ditching • 125 of 175 died
+          <br>Hijacking, fuel exhaustion, ocean ditching
+        </div>
+      </div>
+    </div>
+
+    <!-- Education Tab -->
+    <div class="tab-content" id="education-tab">
+      <div class="physics-card">
+        <h4><i class="fas fa-graduation-cap"></i> Energy Management</h4>
+        <p>In a glide, you're trading potential energy (altitude) for kinetic energy (speed) while overcoming drag. The total energy equation:</p>
+        <div class="formula">
+          E_total = mgh + ½mv²
+        </div>
+        <p>Optimal gliding balances these to maximize range.</p>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-chart-line"></i> Polar Curves</h4>
+        <p>Aircraft performance is described by polar curves showing sink rate vs. airspeed. The tangent from origin to the curve gives best L/D speed.</p>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-compass"></i> Decision Making</h4>
+        <p><strong>DECIDE Model for Emergencies:</strong></p>
+        <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+          <li><strong>D</strong>etect the problem</li>
+          <li><strong>E</strong>stimate need to react</li>
+          <li><strong>C</strong>hoose desired outcome</li>
+          <li><strong>I</strong>dentify actions</li>
+          <li><strong>D</strong>o the necessary actions</li>
+          <li><strong>E</strong>valuate effects</li>
+        </ul>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-book"></i> Pilot Training</h4>
+        <p>Commercial pilots regularly practice:</p>
+        <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+          <li>Power-off 180° approaches</li>
+          <li>Simulated engine failures</li>
+          <li>Energy management techniques</li>
+          <li>Forced landing procedures</li>
+        </ul>
+      </div>
+
+      <div class="physics-card">
+        <h4><i class="fas fa-calculator"></i> Quick Calculations</h4>
+        <p><strong>Rules of Thumb:</strong></p>
+        <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+          <li>3:1 rule - 3 miles per 1,000 ft descent</li>
+          <li>Wind correction: ±10% range per 10 kt</li>
+          <li>Bank penalty: -1% L/D per 3° bank</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<footer>
+  <p>© 2025 Accelerate Solutions, LLC | Advanced Aviation Physics Simulator | Educational Use Only</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+// Global Variables
+let map, glideCircle, flightPath, markers = [], windLayer, terrainLayer;
+let simulationRunning = false;
+let aircraftDatabase = {
+  commercial: [
+    {name: "Boeing 737-800", ld: 15, vbg: 210},
+    {name: "Boeing 757-200", ld: 16, vbg: 220},
+    {name: "Airbus A320", ld: 17, vbg: 240},
+    {name: "Boeing 777-300", ld: 18, vbg: 260},
+    {name: "Boeing 787-9", ld: 19, vbg: 250},
+    {name: "Airbus A350-900", ld: 20, vbg: 255},
+    {name: "Boeing 747-8", ld: 21, vbg: 270}
+  ],
+  ga: [
+    {name: "Cessna 172", ld: 9, vbg: 65},
+    {name: "Piper Cherokee", ld: 10, vbg: 73},
+    {name: "Cirrus SR22", ld: 10.5, vbg: 88},
+    {name: "Diamond DA40", ld: 11, vbg: 78},
+    {name: "Beechcraft Bonanza", ld: 12, vbg: 105}
+  ],
+  military: [
+    {name: "F-16 Fighting Falcon", ld: 13, vbg: 200},
+    {name: "F-15 Eagle", ld: 11, vbg: 220},
+    {name: "C-130 Hercules", ld: 14, vbg: 130},
+    {name: "C-17 Globemaster", ld: 16, vbg: 180},
+    {name: "B-52 Stratofortress", ld: 21, vbg: 200}
+  ],
+  glider: [
+    {name: "Schleicher ASK-21", ld: 34, vbg: 50},
+    {name: "DG-1000", ld: 44, vbg: 51},
+    {name: "Nimbus-4", ld: 60, vbg: 55},
+    {name: "eta", ld: 70, vbg: 58}
+  ]
+};
+
+// Initialize Map
+function initMap() {
+  map = L.map('map', {
+    center: [40.7128, -74.0060],
+    zoom: 7,
+    zoomControl: true
+  });
+
+  // Standard bright OpenStreetMap tiles for excellent visibility
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Click handler for position selection
+  map.on('click', function(e) {
+    document.getElementById('lat').value = e.latlng.lat.toFixed(4);
+    document.getElementById('lon').value = e.latlng.lng.toFixed(4);
+    showStatus('Position updated from map click', 'success');
+  });
+}
+
+// Update Aircraft List
+function updateAircraftList() {
+  const category = document.getElementById('category').value;
+  const select = document.getElementById('aircraft');
+  select.innerHTML = '';
+  
+  if (category === 'custom') {
+    select.innerHTML = '<option value="custom">Enter Custom L/D Ratio</option>';
+    // Show custom input field
+    return;
+  }
+  
+  const aircraft = aircraftDatabase[category] || aircraftDatabase.commercial;
+  aircraft.forEach(ac => {
+    const option = document.createElement('option');
+    option.value = ac.ld;
+    option.text = `${ac.name} (L/D: ${ac.ld}:1, Vbg: ${ac.vbg}kt)`;
+    option.dataset.vbg = ac.vbg;
+    select.appendChild(option);
+  });
+}
+
+// Calculate Glide Range with Advanced Physics
+function calculateGlide() {
+  const ld = parseFloat(document.getElementById('aircraft').value);
+  const altitude = parseFloat(document.getElementById('altitude').value);
+  const airspeed = parseFloat(document.getElementById('airspeed').value);
+  const wind = parseFloat(document.getElementById('wind').value);
+  const bank = parseFloat(document.getElementById('bank').value);
+  const weight = document.getElementById('weight').value;
+  const config = document.getElementById('config').value;
+  const temp = parseFloat(document.getElementById('temp').value);
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lon = parseFloat(document.getElementById('lon').value);
+  
+  // Configuration penalties
+  const configPenalties = {
+    clean: 1.0,
+    gear: 0.7,
+    flaps10: 0.85,
+    flaps20: 0.75,
+    full: 0.6
+  };
+  
+  // Weight factors
+  const weightFactors = {
+    light: 1.05,
+    normal: 1.0,
+    heavy: 0.95
+  };
+  
+  // Calculate effective L/D
+  let effectiveLd = ld * configPenalties[config] * weightFactors[weight];
+  
+  // Bank angle penalty
+  if (bank > 0) {
+    effectiveLd *= Math.cos(bank * Math.PI / 180);
+  }
+  
+  // Temperature effects on true airspeed
+  const isa = 15 - (altitude * 0.00198); // ISA temp at altitude
+  const actualTemp = isa + temp;
+  const tempRatio = (273 + actualTemp) / 288;
+  const trueAirspeed = airspeed * Math.sqrt(tempRatio);
+  
+  // Ground speed
+  const groundSpeed = trueAirspeed + wind;
+  
+  // Basic glide calculation
+  const glideRatio = groundSpeed / trueAirspeed;
+  const distanceNM = (altitude / 6076) * effectiveLd * glideRatio;
+  const distanceKM = distanceNM * 1.852;
+  const distanceMI = distanceNM * 1.15078;
+  
+  // Time to ground
+  const sinkRate = trueAirspeed / effectiveLd; // in knots vertical
+  const timeMinutes = altitude / (sinkRate * 101.27); // convert to fpm
+  
+  // Display results
+  displayResults({
+    distanceNM,
+    distanceKM,
+    distanceMI,
+    timeMinutes,
+    effectiveLd,
+    sinkRate,
+    groundSpeed,
+    trueAirspeed
+  });
+  
+  // Update map
+  updateMap(lat, lon, distanceKM);
+  
+  // Find airports
+  findNearbyAirports(lat, lon, distanceKM);
+  
+  showStatus('Glide range calculated successfully', 'success');
+}
+
+// Display Results
+function displayResults(data) {
+  const resultsHTML = `
+    <h3 style="color: var(--accent); margin-bottom: 1rem;">
+      <i class="fas fa-chart-bar"></i> Calculation Results
+    </h3>
+    <div class="result-item">
+      <span class="result-label">Maximum Glide Distance</span>
+      <span class="result-value">${data.distanceMI.toFixed(1)} mi</span>
+    </div>
+    <div class="result-item">
+      <span class="result-label">Metric Distance</span>
+      <span class="result-value">${data.distanceKM.toFixed(1)} km</span>
+    </div>
+    <div class="result-item">
+      <span class="result-label">Time to Ground</span>
+      <span class="result-value">${data.timeMinutes.toFixed(1)} min</span>
+    </div>
+    <div class="result-item">
+      <span class="result-label">Effective L/D Ratio</span>
+      <span class="result-value">${data.effectiveLd.toFixed(1)}:1</span>
+    </div>
+    <div class="result-item">
+      <span class="result-label">Sink Rate</span>
+      <span class="result-value">${(data.sinkRate * 101.27).toFixed(0)} fpm</span>
+    </div>
+    <div class="result-item">
+      <span class="result-label">Ground Speed</span>
+      <span class="result-value">${data.groundSpeed.toFixed(0)} kt</span>
+    </div>
+    <div class="result-item">
+      <span class="result-label">True Airspeed</span>
+      <span class="result-value">${data.trueAirspeed.toFixed(0)} kt</span>
+    </div>
+  `;
+  
+  document.getElementById('results').innerHTML = resultsHTML;
+}
+
+// Update Map Display
+function updateMap(lat, lon, rangeKM) {
+  // Clear existing layers
+  if (glideCircle) map.removeLayer(glideCircle);
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  
+  // Add glide circle
+  glideCircle = L.circle([lat, lon], {
+    radius: rangeKM * 1000,
+    color: '#06b6d4',
+    fillColor: '#06b6d4',
+    fillOpacity: 0.1,
+    weight: 2
+  }).addTo(map);
+  
+  // Add center marker
+  const centerMarker = L.marker([lat, lon], {
+    icon: L.divIcon({
+      html: '<i class="fas fa-plane" style="color: #f59e0b; font-size: 24px;"></i>',
+      iconSize: [24, 24],
+      className: 'custom-div-icon'
+    })
+  }).addTo(map);
+  centerMarker.bindPopup('<b>Starting Position</b><br>Click map to change');
+  markers.push(centerMarker);
+  
+  // Fit map to circle
+  map.fitBounds(glideCircle.getBounds());
+}
+
+// Find Nearby Airports
+async function findNearbyAirports(lat, lon, rangeKM) {
+  try {
+    // Using Overpass API for better airport data
+    const query = `
+      [out:json][timeout:25];
+      (
+        node["aeroway"="aerodrome"](around:${rangeKM * 1000},${lat},${lon});
+        way["aeroway"="aerodrome"](around:${rangeKM * 1000},${lat},${lon});
+      );
+      out body;
+    `;
+    
+    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    data.elements.forEach(airport => {
+      const alat = airport.lat || airport.center?.lat;
+      const alon = airport.lon || airport.center?.lon;
+      if (!alat || !alon) return;
+      
+      const distance = haversine(lat, lon, alat, alon);
+      if (distance <= rangeKM) {
+        const name = airport.tags?.name || 'Unknown Airport';
+        const icao = airport.tags?.icao || '';
+        const iata = airport.tags?.iata || '';
+        
+        const marker = L.marker([alat, alon], {
+          icon: L.divIcon({
+            html: '<i class="fas fa-plane-arrival" style="color: #10b981; font-size: 20px;"></i>',
+            iconSize: [20, 20],
+            className: 'custom-div-icon'
+          })
+        });
+        
+        marker.bindPopup(`
+          <b>${name}</b><br>
+          ${icao ? `ICAO: ${icao}<br>` : ''}
+          ${iata ? `IATA: ${iata}<br>` : ''}
+          Distance: ${distance.toFixed(1)} km<br>
+          Bearing: ${bearing(lat, lon, alat, alon).toFixed(0)}°
+        `);
+        
+        marker.addTo(map);
+        markers.push(marker);
+      }
+    });
+    
+    showStatus(`Found ${markers.length - 1} airports within range`, 'success');
+  } catch (error) {
+    console.error('Error finding airports:', error);
+    showStatus('Could not load airport data', 'warning');
+  }
+}
+
+// Haversine Distance
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Calculate Bearing
+function bearing(lat1, lon1, lat2, lon2) {
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+  const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+            Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+  const bearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  return bearing;
+}
+
+// Simulate Flight Path
+function simulateFlight() {
+  if (simulationRunning) {
+    showStatus('Simulation already running', 'warning');
+    return;
+  }
+  
+  simulationRunning = true;
+  showStatus('Starting flight simulation...', 'success');
+  
+  // Get parameters
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lon = parseFloat(document.getElementById('lon').value);
+  const altitude = parseFloat(document.getElementById('altitude').value);
+  const ld = parseFloat(document.getElementById('aircraft').value);
+  
+  // Create animated flight path
+  const points = [];
+  const steps = 50;
+  let currentAlt = altitude;
+  
+  for (let i = 0; i <= steps; i++) {
+    const progress = i / steps;
+    const altLoss = altitude * progress;
+    currentAlt = altitude - altLoss;
+    
+    // Simple spiral pattern for demonstration
+    const angle = progress * Math.PI * 2;
+    const radius = (1 - progress) * 0.1;
+    const newLat = lat + radius * Math.cos(angle);
+    const newLon = lon + radius * Math.sin(angle);
+    
+    points.push([newLat, newLon]);
+  }
+  
+  // Draw flight path
+  if (flightPath) map.removeLayer(flightPath);
+  flightPath = L.polyline(points, {
+    color: '#f59e0b',
+    weight: 3,
+    opacity: 0.8
+  }).addTo(map);
+  
+  // Animate aircraft icon
+  let currentStep = 0;
+  const animationInterval = setInterval(() => {
+    if (currentStep >= points.length - 1) {
+      clearInterval(animationInterval);
+      simulationRunning = false;
+      showStatus('Simulation complete', 'success');
+      return;
+    }
+    
+    // Move aircraft marker
+    if (markers[0]) {
+      markers[0].setLatLng(points[currentStep]);
+    }
+    
+    currentStep++;
+  }, 100);
+}
+
+// Load Historical Example
+function loadExample(incident) {
+  const examples = {
+    transat236: {
+      start: [48.83, -30.23],
+      end: [38.77, -27.09],
+      altitude: 33000,
+      distance: 75,
+      aircraft: "Airbus A330",
+      ld: 16,
+      description: "Air Transat 236 lost both engines due to fuel leak. Glided 75 miles to Azores."
+    },
+    gimli: {
+      start: [50.90, -97.00],
+      end: [50.63, -97.05],
+      altitude: 41000,
+      distance: 17,
+      aircraft: "Boeing 767",
+      ld: 15,
+      description: "The Gimli Glider ran out of fuel due to metric conversion error."
+    },
+    hudson: {
+      start: [40.77, -73.87],
+      end: [40.76, -74.01],
+      altitude: 3200,
+      distance: 8.5,
+      aircraft: "Airbus A320",
+      ld: 17,
+      description: "US Airways 1549 struck birds, lost both engines, ditched in Hudson River."
+    },
+    taca110: {
+      start: [30.04, -90.03],
+      end: [29.99, -90.26],
+      altitude: 16500,
+      distance: 8,
+      aircraft: "Boeing 737",
+      ld: 15,
+      description: "TACA 110 lost both engines in severe hail, landed on a levee."
+    },
+    ba9: {
+      start: [-7.79, 110.36],
+      end: [-6.12, 106.65],
+      altitude: 37000,
+      distance: 25,
+      aircraft: "Boeing 747",
+      ld: 21,
+      description: "BA Flight 9 flew through volcanic ash, all four engines failed."
+    },
+    aloha243: {
+      start: [19.72, -155.05],
+      end: [20.90, -156.43],
+      altitude: 24000,
+      distance: 65,
+      aircraft: "Boeing 737",
+      ld: 15,
+      description: "Aloha 243 suffered explosive decompression, roof torn off, landed safely."
+    },
+    ethiopian961: {
+      start: [-4.67, 55.52],
+      end: [-11.75, 43.24],
+      altitude: 31000,
+      distance: 500,
+      aircraft: "Boeing 767",
+      ld: 15,
+      description: "Ethiopian 961 hijacked, ran out of fuel, attempted ocean ditching."
+    }
+  };
+  
+  const example = examples[incident];
+  if (!example) return;
+  
+  // Clear existing map layers
+  if (glideCircle) map.removeLayer(glideCircle);
+  if (flightPath) map.removeLayer(flightPath);
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  
+  // Set parameters
+  document.getElementById('altitude').value = example.altitude;
+  document.getElementById('aircraft').value = example.ld;
+  document.getElementById('lat').value = example.start[0];
+  document.getElementById('lon').value = example.start[1];
+  
+  // Draw flight path
+  const path = L.polyline([example.start, example.end], {
+    color: '#ef4444',
+    weight: 4,
+    opacity: 0.8,
+    dashArray: '10, 10'
+  }).addTo(map);
+  
+  // Add start marker
+  const startMarker = L.marker(example.start, {
+    icon: L.divIcon({
+      html: '<i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 24px;"></i>',
+      iconSize: [24, 24],
+      className: 'custom-div-icon'
+    })
+  }).bindPopup(`<b>Emergency Start</b><br>${example.aircraft}<br>Altitude: ${example.altitude} ft`).addTo(map);
+  
+  // Add end marker
+  const endMarker = L.marker(example.end, {
+    icon: L.divIcon({
+      html: '<i class="fas fa-check-circle" style="color: #10b981; font-size: 24px;"></i>',
+      iconSize: [24, 24],
+      className: 'custom-div-icon'
+    })
+  }).bindPopup(`<b>Landing Site</b><br>Distance: ${example.distance} miles`).addTo(map);
+  
+  markers.push(startMarker, endMarker);
+  
+  // Center and zoom the map to show the entire flight path with padding
+  setTimeout(() => {
+    map.fitBounds(path.getBounds(), {
+      padding: [50, 50],
+      animate: true,
+      duration: 1
+    });
+  }, 100);
+  
+  // Show description
+  showStatus(example.description, 'success');
+  
+  // Switch to history tab if not already there
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelectorAll('.tab')[1].classList.add('active'); // History tab
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  document.getElementById('history-tab').classList.add('active');
+}
+
+// Get Current Location
+function getCurrentLocation() {
+  if (!navigator.geolocation) {
+    showStatus('Geolocation not supported', 'error');
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      document.getElementById('lat').value = position.coords.latitude.toFixed(4);
+      document.getElementById('lon').value = position.coords.longitude.toFixed(4);
+      map.setView([position.coords.latitude, position.coords.longitude], 10);
+      showStatus('Location updated', 'success');
+    },
+    error => {
+      showStatus('Could not get location', 'error');
+    }
+  );
+}
+
+// Update Bank Display
+function updateBankDisplay() {
+  const bank = document.getElementById('bank').value;
+  const display = document.getElementById('bankDisplay');
+  display.textContent = `Bank: ${bank}° ${bank > 30 ? '(High - Increased sink!)' : bank > 0 ? '(Turning)' : '(Straight)'}`;
+}
+
+// Toggle Advanced Mode
+function toggleAdvanced() {
+  const toggle = document.getElementById('advancedToggle');
+  toggle.classList.toggle('active');
+  
+  if (toggle.classList.contains('active')) {
+    showStatus('Advanced weather mode enabled', 'success');
+    // Load live weather data
+    loadLiveWeather();
+  } else {
+    showStatus('Advanced weather mode disabled', 'success');
+  }
+}
+
+// Load Live Weather
+async function loadLiveWeather() {
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lon = parseFloat(document.getElementById('lon').value);
+  
+  try {
+    const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=windspeed_10m,winddirection_10m,windspeed_80m,winddirection_80m,windspeed_120m,winddirection_120m`);
+    const data = await response.json();
+    
+    if (data.current_weather) {
+      const wind = data.current_weather.windspeed;
+      const dir = data.current_weather.winddirection;
+      
+      // Calculate headwind/tailwind component (simplified)
+      // Assuming aircraft heading is 090 (east) for demo
+      const headingRad = 90 * Math.PI / 180;
+      const windDirRad = dir * Math.PI / 180;
+      const windComponent = wind * Math.cos(windDirRad - headingRad) * 0.539957; // Convert km/h to knots
+      
+      document.getElementById('wind').value = windComponent.toFixed(0);
+      showStatus(`Live wind loaded: ${wind.toFixed(0)} km/h from ${dir.toFixed(0)}°`, 'success');
+    }
+  } catch (error) {
+    showStatus('Could not load weather data', 'warning');
+  }
+}
+
+// Show Tab
+function showTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  // Update content
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  document.getElementById(`${tabName}-tab`).classList.add('active');
+}
+
+// Show Status Message
+function showStatus(message, type) {
+  const existingStatus = document.querySelector('.status');
+  if (existingStatus) existingStatus.remove();
+  
+  const status = document.createElement('div');
+  status.className = `status ${type}`;
+  status.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+  
+  document.getElementById('results').insertAdjacentElement('afterbegin', status);
+  
+  setTimeout(() => {
+    if (status.parentElement) status.remove();
+  }, 5000);
+}
+
+// Reset All
+function resetAll() {
+  // Clear map layers
+  if (glideCircle) map.removeLayer(glideCircle);
+  if (flightPath) map.removeLayer(flightPath);
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  
+  // Reset inputs
+  document.getElementById('altitude').value = '35000';
+  document.getElementById('airspeed').value = '250';
+  document.getElementById('wind').value = '0';
+  document.getElementById('bank').value = '0';
+  document.getElementById('temp').value = '0';
+  updateBankDisplay();
+  
+  // Clear results
+  document.getElementById('results').innerHTML = '';
+  
+  // Reset view
+  map.setView([40.7128, -74.0060], 7);
+  
+  showStatus('All parameters reset', 'success');
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', function() {
+  initMap();
+  updateAircraftList();
+  
+  // Add keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+      switch(e.key) {
+        case 'Enter':
+          e.preventDefault();
+          calculateGlide();
+          break;
+        case 'r':
+          e.preventDefault();
+          resetAll();
+          break;
+        case 's':
+          e.preventDefault();
+          simulateFlight();
+          break;
+      }
+    }
+  });
+  
+  showStatus('Welcome to Glide Range Explorer Pro!', 'success');
+});
+</script>
+</body>
+</html>
